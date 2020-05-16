@@ -1,6 +1,6 @@
 # minica
 
-[Minica[(https://github.com/jsha/minica) is a simple CA intended
+[Minica](https://github.com/jsha/minica) is a simple CA intended
 for use in situations where the CA operator also operates each host
 where a certificate will be used. It automatically generates both
 a key and a certificate when asked to produce a certificate. It
