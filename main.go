@@ -24,8 +24,12 @@ import (
 	"time"
 )
 
-var version string = "DEV"
-var date string
+// filled at build time with ldflags by GoReleaser (part of build action)
+var (
+	version = "DEV"
+	commit  = "No commit ID recorded."
+	date    = "No build date recorded."
+)
 
 func main() {
 	err := main2()
@@ -297,6 +301,7 @@ func main2() error {
 	var domains = flag.String("domains", "", "Comma separated domain names to include as Server Alternative Names.")
 	var ipAddresses = flag.String("ip-addresses", "", "Comma separated IP addresses to include as Server Alternative Names.")
 	var keySize = flag.Int("keySize", 2048, "Key size in bits")
+	var reportVersion = flag.Bool("version", false, "Print the minica version number and build information then exit.")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, `
@@ -318,10 +323,15 @@ the certificate, or the first IP address if no domain names are present. It
 will not overwrite existing keys or certificates.
 
 `)
-		fmt.Fprintf(os.Stderr, "version %v (built on %v)\n\n", version, date)
 		flag.PrintDefaults()
 	}
 	flag.Parse()
+
+	if *reportVersion {
+		fmt.Printf("minica %s\n %s\n %s\n", version, commit, date)
+		os.Exit(0)
+	}
+
 	if *domains == "" && *ipAddresses == "" {
 		flag.Usage()
 		os.Exit(1)
