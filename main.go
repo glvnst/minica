@@ -198,7 +198,7 @@ func publicKeysEqual(a, b interface{}) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return bytes.Compare(aBytes, bBytes) == 0, nil
+	return bytes.Equal(aBytes, bBytes), nil
 }
 
 func calculateSKID(pubKey crypto.PublicKey) ([]byte, error) {
