@@ -1,8 +1,13 @@
-Minica is a simple CA intended for use in situations where the CA operator
-also operates each host where a certificate will be used. It automatically
-generates both a key and a certificate when asked to produce a certificate.
-It does not offer OCSP or CRL services. Minica is appropriate, for instance,
-for generating certificates for RPC systems or microservices.
+# minica
+
+[Minica[(https://github.com/jsha/minica) is a simple CA intended
+for use in situations where the CA operator also operates each host
+where a certificate will be used. It automatically generates both
+a key and a certificate when asked to produce a certificate. It
+does not offer OCSP or CRL services. Minica is appropriate, for
+instance, for generating certificates for RPC systems or microservices.
+
+## NOTE! Please see [the official minica repo - jsha/minica](https://github.com/jsha/minica) rather than relying on this fork.
 
 On first run, minica will generate a keypair and a root certificate in the
 current directory, and will reuse that same keypair and root certificate
