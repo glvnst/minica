@@ -31,12 +31,27 @@ var (
 	date    = "No build date recorded."
 )
 
-func main() {
-	err := main2()
-	if err != nil {
-		log.Fatal(err)
-	}
-}
+const usageText = `Usage: %s [OPTIONS]
+
+Minica is a simple CA intended for use in situations where the CA operator
+also operates each host where a certificate will be used. It automatically
+generates both a key and a certificate when asked to produce a certificate.
+It does not offer OCSP or CRL services. Minica is appropriate, for instance,
+for generating certificates for RPC systems or microservices.
+
+On first run, minica will generate a keypair and a root certificate in the
+current directory, and will reuse that same keypair and root certificate
+unless they are deleted.
+
+On each run, minica will generate a new keypair and sign an end-entity (leaf)
+certificate for that keypair. The certificate will contain a list of DNS names
+and/or IP addresses from the command line flags. The key and certificate are
+placed in a new directory whose name is chosen as the first domain name from
+the certificate, or the first IP address if no domain names are present. It
+will not overwrite existing keys or certificates.
+
+Options:
+`
 
 type issuer struct {
 	key  crypto.Signer
@@ -294,44 +309,23 @@ func split(s string) (results []string) {
 	return nil
 }
 
-func main2() error {
+func main() {
 	var caKey = flag.String("ca-key", "minica-key.pem", "Root private key filename, PEM encoded.")
 	var caCert = flag.String("ca-cert", "minica.pem", "Root certificate filename, PEM encoded.")
 	var caCommonName = flag.String("ca-cn", "", "Root certificate CommonName. Only used if root certicate needs to be created.")
 	var domains = flag.String("domains", "", "Comma separated domain names to include as Server Alternative Names.")
 	var ipAddresses = flag.String("ip-addresses", "", "Comma separated IP addresses to include as Server Alternative Names.")
-	var keySize = flag.Int("keySize", 2048, "Key size in bits")
+	var keySize = flag.Int("key-size", 2048, "Key size in bits")
 	var reportVersion = flag.Bool("version", false, "Print the minica version number and build information then exit.")
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
-		fmt.Fprintf(os.Stderr, `
-Minica is a simple CA intended for use in situations where the CA operator
-also operates each host where a certificate will be used. It automatically
-generates both a key and a certificate when asked to produce a certificate.
-It does not offer OCSP or CRL services. Minica is appropriate, for instance,
-for generating certificates for RPC systems or microservices.
-
-On first run, minica will generate a keypair and a root certificate in the
-current directory, and will reuse that same keypair and root certificate
-unless they are deleted.
-
-On each run, minica will generate a new keypair and sign an end-entity (leaf)
-certificate for that keypair. The certificate will contain a list of DNS names
-and/or IP addresses from the command line flags. The key and certificate are
-placed in a new directory whose name is chosen as the first domain name from
-the certificate, or the first IP address if no domain names are present. It
-will not overwrite existing keys or certificates.
-
-`)
+		fmt.Fprintf(os.Stdout, usageText, os.Args[0])
 		flag.PrintDefaults()
 	}
 	flag.Parse()
-
 	if *reportVersion {
 		fmt.Printf("minica %s\n %s\n %s\n", version, commit, date)
 		os.Exit(0)
 	}
-
 	if *domains == "" && *ipAddresses == "" {
 		flag.Usage()
 		os.Exit(1)
@@ -357,8 +351,10 @@ will not overwrite existing keys or certificates.
 	}
 	issuer, err := getIssuer(*caKey, *caCert, *caCommonName, *keySize)
 	if err != nil {
-		return err
+		log.Fatalf("Failed to load or generate CA, cannot continue. Error: %s", err)
 	}
 	_, err = sign(issuer, domainSlice, ipSlice, *keySize)
-	return err
+	if err != nil {
+		log.Fatalf("Failed to generate a signed certificate. Error: %s", err)
+	}
 }
